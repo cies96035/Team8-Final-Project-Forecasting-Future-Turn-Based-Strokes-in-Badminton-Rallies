@@ -83,11 +83,17 @@ def prepare_dataset(config):
 
     # encode shot type
     codes_type, uniques_type = pd.factorize(train_matches['type'])
+    # print(codes_type, uniques_type)
     train_matches['type'] = codes_type + 1                                # Reserve code 0 for paddings
     val_matches['type'] = val_matches['type'].apply(lambda x: list(uniques_type).index(x)+1)
     test_matches['type'] = test_matches['type'].apply(lambda x: list(uniques_type).index(x)+1)
     config['uniques_type'] = uniques_type.to_list()
     config['shot_num'] = len(uniques_type) + 1                            # Add padding
+    config['service'] = []
+    for i, e in enumerate(config['uniques_type']):
+        if 'service' in e:
+            config['service'].append(i)
+    # print(config['service'])
 
     # encode player
     train_matches['player'] = train_matches['player'].apply(lambda x: x+1)

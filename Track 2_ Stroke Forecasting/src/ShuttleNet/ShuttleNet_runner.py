@@ -82,7 +82,10 @@ def shotGen_trainer(data_loader, encoder, decoder, criterion, encoder_optimizer,
             output_xy, output_shot_logits = decoder(input_shot, input_x, input_y, input_player, encode_local_output, encode_global_A, encode_global_B, target_player)
             
             pad_mask = (input_shot!=PAD)
+            # print(output_shot_logits)
             output_shot_logits = output_shot_logits[pad_mask]
+            # print(output_shot_logits)
+            # print("A")
             target_shot = target_shot[pad_mask]
             output_xy = output_xy[pad_mask]
             target_x = target_x[pad_mask]
@@ -95,7 +98,10 @@ def shotGen_trainer(data_loader, encoder, decoder, criterion, encoder_optimizer,
 
             # target_shot2 = torch.eye(11, device='cuda:0')[target_shot]
             # loss_shot = criterion['mae'](output_shot_logits, target_shot2)
-
+            # print(output_shot_logits.shape)
+            # print(target_shot.shape)
+            # print(config['uniques_type'])
+            
             loss_shot = criterion['entropy'](output_shot_logits, target_shot)
             loss_area = Gaussian2D_loss(output_xy, gold_xy)
 
@@ -164,6 +170,7 @@ def shotgen_generator(given_seq, encoder, decoder, config, samples, device):
                 corr = torch.tanh(output_xy[:, -1, 4]) #corr
                 
                 cov = torch.zeros(2, 2).cuda(output_xy.device)
+                # cov = torch.zeros(2, 2) #.cuda(output_xy.device)
                 cov[0, 0]= sx * sx
                 cov[0, 1]= corr * sx * sy
                 cov[1, 0]= corr * sx * sy
@@ -173,6 +180,7 @@ def shotgen_generator(given_seq, encoder, decoder, config, samples, device):
                 mvnormal = torchdist.MultivariateNormal(mean, cov)
                 output_xy = mvnormal.sample().unsqueeze(0)
 
+                # output_shot_logits[config['service']] = -1e10
                 # sampling
                 shot_prob = F.softmax(output_shot_logits, dim=-1)
                 output_shot = shot_prob[0].multinomial(num_samples=1).unsqueeze(0)

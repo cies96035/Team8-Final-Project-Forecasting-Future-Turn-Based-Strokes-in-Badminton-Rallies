@@ -131,6 +131,9 @@ class ShotGenDecoder(nn.Module):
 class ShotGenPredictor(nn.Module):
     def __init__(self, config):
         super().__init__()
+        self.serviceIdxs = config['service']
+        for i in range(len(self.serviceIdxs)):
+            self.serviceIdxs[i] -= 1
         self.shotgen_decoder = ShotGenDecoder(config)
         self.area_decoder = nn.Sequential(
             nn.Linear(config['encode_dim'], config['area_num'], bias=False),
@@ -151,7 +154,15 @@ class ShotGenPredictor(nn.Module):
 
         area_logits = self.area_decoder(decode_output)
         shot_logits = self.shot_decoder(decode_output)
-
+        # print(self.serviceIdxs)
+        # print(type(shot_logits))
+        # print(shot_logits[0].dtype)
+        # print(shot_logits)
+        # shot_logits[[0, 9]] = 0.0 # bug
+        # print(type(shot_logits))
+        # print(shot_logits[0].dtype)
+        # print('a')
+        # shot_logits /= torch.sum(shot_logits) # bug
         if return_attns:
             return area_logits, shot_logits, decoder_self_attention_list, decoder_encoder_self_attention_list, disentangled_weight_local
         else:
